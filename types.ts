@@ -18,3 +18,9 @@ export enum GameState {
 }
 
 export type Language = 'zh' | 'en';
+
+export interface ZenMomentContent {
+  quote: string;
+  source: string;
+  insight: string;
+}
