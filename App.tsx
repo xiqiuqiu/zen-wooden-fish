@@ -83,10 +83,15 @@ export default function App() {
     setZenQuote(""); 
   };
 
-  const handleKnock = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+  // UPDATED: Uses PointerEvent to handle both Mouse and Touch consistently
+  // This prevents double firing (touchstart + mousedown) on mobile.
+  const handleKnock = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    // Prevent default browser actions (like text selection or scrolling on some browsers)
     e.preventDefault(); 
-    e.stopPropagation(); // Prevent duplicate events
     
+    // Stop propagation to prevent any parent handlers
+    e.stopPropagation();
+
     // Ensure striker is active/awake
     resetActivityTimer();
 
@@ -97,14 +102,9 @@ export default function App() {
     setStrikeTrigger(prev => prev + 1);
 
     // Calculate click position for subtle tilt feedback (Physics)
-    let clientX, clientY;
-    if ('touches' in e) {
-       clientX = e.touches[0].clientX;
-       clientY = e.touches[0].clientY;
-    } else {
-       clientX = (e as React.MouseEvent).clientX;
-       clientY = (e as React.MouseEvent).clientY;
-    }
+    // PointerEvent provides clientX/Y directly for both mouse and touch
+    const clientX = e.clientX;
+    const clientY = e.clientY;
 
     let rotateX = 0;
     let rotateY = 0;
@@ -150,7 +150,7 @@ export default function App() {
     if (navigator.vibrate) {
       navigator.vibrate(10); 
     }
-  }, [resetActivityTimer, language]); // Added language as dependency
+  }, [resetActivityTimer, language]); 
 
   const handleSeekWisdom = async () => {
     if (isLoadingQuote) return;
@@ -162,10 +162,12 @@ export default function App() {
   };
 
   return (
+    // UPDATED: h-[100dvh] ensures it fits mobile screen exactly without address bar scroll issues.
+    // justifyContent changed to flex-col with gap to make it tighter.
     <div 
-      className="min-h-screen bg-[#F7F5F2] flex flex-col items-center justify-between overflow-hidden touch-none select-none"
-      onMouseMove={handleInteractionStart}
-      onTouchStart={handleInteractionStart}
+      className="h-[100dvh] bg-[#F7F5F2] flex flex-col items-center overflow-hidden touch-none select-none"
+      onPointerMove={handleInteractionStart}
+      onPointerDown={handleInteractionStart}
     >
       
       {/* Language Toggle Button */}
@@ -177,32 +179,37 @@ export default function App() {
       </button>
 
       {/* Header / Inventory Area */}
-      <header className="w-full pt-6 md:pt-10 flex flex-col items-center z-10 pointer-events-none">
-        <h1 className="text-4xl md:text-5xl font-calligraphy text-stone-800 mb-4 opacity-90">{t.title}</h1>
+      {/* Reduced padding on desktop (md:pt-10 -> md:pt-6) to save vertical space */}
+      <header className="w-full pt-4 md:pt-6 flex flex-col items-center z-10 pointer-events-none flex-none">
+        <h1 className="text-3xl md:text-5xl font-calligraphy text-stone-800 mb-2 md:mb-4 opacity-90">{t.title}</h1>
         <div className="pointer-events-auto">
             <InventoryDisplay inventory={inventory} totalClicks={totalClicks} language={language} />
         </div>
       </header>
 
       {/* Main Interactive Area */}
-      <main className="flex-1 w-full flex items-center justify-center relative perspective-container">
+      {/* flex-grow ensures this takes up available space, centering the fish vertically in that space */}
+      <main className="flex-grow w-full flex items-center justify-center relative perspective-container mx-h-50">
         
         {/* The Striker (Visual only) */}
-        {/* Container positioned relative to the fish to allow "Resting" logic */}
         <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
-             {/* 
-                Responsive adjustments:
-                Mobile: Use viewport units (min(50vw, ...)) to prevent overflow. 
-                Reduced translate offsets on mobile so the Resting state doesn't push it off-screen.
-             */}
              <div 
                 className="relative transition-transform duration-300"
                 style={{
-                  width: 'min(50vw, 280px)',
-                  height: 'min(50vw, 280px)',
+                  // Added vh constraint for better fit on landscape desktop screens
+                  width: 'min(50vw, 280px, 35vh)',
+                  height: 'min(50vw, 280px, 35vh)',
                 }}
              >
-                <div className="w-full h-full transform translate-x-[2%] -translate-y-[2%] md:translate-x-[25%] md:-translate-y-[20%]">
+                {/* 
+                  Positioning Logic:
+                  Mobile: translate-x-[14%] translate-y-[2%] 
+                         - Moves container Right and slightly Down from center.
+                         - Reduced Y (from 16%) to align stick vertically with fish (unified horizontal line).
+                  Desktop: md:translate-x-[25%] md:-translate-y-[20%]
+                         - Moves container further Out and Up, suiting the larger layout/fish ratio on PC.
+                */}
+                <div className="w-full h-full transform translate-x-[14%] translate-y-[2%] md:translate-x-[25%] md:-translate-y-[20%]">
                   <Striker strikeTrigger={strikeTrigger} isResting={isResting} />
                 </div>
              </div>
@@ -214,16 +221,20 @@ export default function App() {
             style={{
                 width: 'var(--fish-size)',
                 height: 'var(--fish-size)',
-                '--fish-size': 'min(65vw, 360px)', 
+                // Added 50vh constraint to prevent fish from pushing footer off screen on laptops
+                '--fish-size': 'min(65vw, 450px, 50vh)', 
             } as React.CSSProperties}
         >
             {/* The Clickable Fish */}
+            {/* UPDATED: Uses onPointerDown exclusively. touch-action: manipulation removes tap delay. */}
             <div 
               ref={fishRef}
-              onMouseDown={handleKnock}
-              onTouchStart={handleKnock}
-              className="w-full h-full relative cursor-pointer z-20 will-change-transform tap-highlight-transparent"
-              style={{ transform: 'perspective(1000px) scale(1)' }}
+              onPointerDown={handleKnock}
+              className="w-full h-full relative cursor-pointer z-20 will-change-transform"
+              style={{ 
+                  transform: 'perspective(1000px) scale(1)',
+                  touchAction: 'manipulation' // Prevents double-tap zoom, speeds up tap response
+              }}
             >
               <img 
                 src={WOODEN_FISH_IMG_URL} 
@@ -241,7 +252,7 @@ export default function App() {
             <div 
                 className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-2/3 h-12 bg-black/10 blur-2xl rounded-[100%] pointer-events-none transition-all duration-100"
                 style={{
-                    transform: strikeTrigger % 2 !== 0 ? 'translate(-50%, 0) scale(0.95)' : 'translate(-50%, 0) scale(1)', // Simple visual feedback synced roughly with click
+                    transform: strikeTrigger % 2 !== 0 ? 'translate(-50%, 0) scale(0.95)' : 'translate(-50%, 0) scale(1)', 
                     opacity: 0.2
                 }}
             />
@@ -254,13 +265,28 @@ export default function App() {
       </main>
 
       {/* Footer / Zen Features */}
-      <footer className="w-full pb-8 px-6 flex flex-col items-center z-10 space-y-6">
+      {/* Compact padding for mobile, reduced bottom padding slightly for desktop */}
+      <footer className="w-full pb-4 md:pb-6 px-6 flex flex-col items-center z-10 space-y-3 md:space-y-5 flex-none">
         
         {/* Zen Quote Display */}
-        <div className="min-h-[80px] max-w-lg w-full text-center">
+        {/* Fixed height to prevent layout jumps, but smaller min-height for mobile */}
+        <div className="min-h-[60px] md:min-h-[80px] max-w-lg w-full text-center relative">
             {zenQuote && (
-                <div className="bg-white/60 backdrop-blur-md p-6 rounded-2xl border border-stone-200/50 shadow-lg animate-fade-in transition-all">
-                    <p className="text-stone-800 font-calligraphy text-2xl leading-relaxed">
+                <div className="relative bg-white/60 backdrop-blur-md p-4 md:p-6 rounded-2xl border border-stone-200/50 shadow-lg animate-fade-in transition-all group">
+                    {/* Close Button */}
+                    <button 
+                        onClick={() => setZenQuote("")}
+                        className="absolute top-2 right-2 p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-200/30 rounded-full transition-colors z-20"
+                        title={language === 'zh' ? "关闭" : "Close"}
+                        aria-label="Close quote"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                    {/* Text content with right padding to avoid close button */}
+                    <p className="text-stone-800 font-calligraphy text-xl md:text-2xl leading-relaxed pr-6">
                         {zenQuote}
                     </p>
                 </div>

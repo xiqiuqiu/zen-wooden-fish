@@ -15,7 +15,7 @@ export const Striker: React.FC<StrikerProps> = ({ strikeTrigger, isResting }) =>
     if (strikeTrigger > 0 && innerRef.current) {
       innerRef.current.animate([
         { transform: 'rotate(0deg) translate(0, 0)' },
-        { transform: 'rotate(-20deg) translate(-5%, 5%)', offset: 0.1 }, // Snap down
+        { transform: 'rotate(-20deg) translate(-0%, 0%)', offset: 0.1 }, // Snap down
         { transform: 'rotate(0deg) translate(0, 0)' } // Bounce back
       ], {
         duration: 150,
