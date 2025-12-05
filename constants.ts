@@ -1,8 +1,13 @@
+
+
 // Replace this URL with the actual path to the user's uploaded image if hosted, 
 // or a placeholder if running locally without assets.
 // Since I cannot access the user's local file system, I am using a placeholder that looks like a wooden fish.
 export const WOODEN_FISH_IMG_URL = "https://pic1.imgdb.cn/item/6930db8dd5fdcd03ca9d2991.png"; 
 export const STRIKER_IMG_URL = "https://pic1.imgdb.cn/item/6930e65e4c455cbabc992a3e.png";
+
+// A realistic wood block sound hosted on a reliable CDN (JSDelivr) to avoid CORS issues.
+export const WOODEN_FISH_AUDIO_URL = "https://woodmp3.oss-cn-beijing.aliyuncs.com/fe9dd5334125416eae335435c54ccdfe.mp3";
 
 export const CONVERSION_RATES = {
   MERIT_TO_BEAD: 100,
