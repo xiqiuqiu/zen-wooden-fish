@@ -1,6 +1,6 @@
 
-
 import { WOODEN_FISH_AUDIO_URL } from '../constants';
+import { sanitizeError } from '../utils/security';
 
 const CACHE_NAME = 'zen-audio-cache-v1';
 
@@ -57,8 +57,7 @@ class AudioService {
         console.warn("Audio fetch failed:", response.statusText);
       }
     } catch (error) {
-      const errorMsg = error instanceof Error ? 'Audio preload failed' : 'Unknown error';
-      console.warn("Failed to preload audio file:", errorMsg);
+      console.warn("Failed to preload audio file:", sanitizeError(error, 'Audio preload failed'));
     }
   }
 

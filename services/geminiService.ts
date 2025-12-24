@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { Language, ZenMomentContent } from "../types";
+import { sanitizeError } from "../utils/security";
 
 const apiKey = process.env.API_KEY || ''; 
 
@@ -41,8 +42,7 @@ export const getZenWisdom = async (totalMerits: number, language: Language): Pro
     return response.text.trim();
   } catch (error) {
     // Log sanitized error to prevent potential leakage of sensitive information
-    const errorMsg = error instanceof Error && error.message ? 'API request failed' : 'Unknown error';
-    console.error("Gemini Error:", errorMsg);
+    console.error("Gemini Error:", sanitizeError(error, 'API request failed'));
     return language === 'zh' ? "本来无一物，何处惹尘埃。" : "Originally there is nothing, where can dust alight?";
   }
 };
@@ -151,8 +151,7 @@ ${langInstruction}
     }
   } catch (error) {
     // Log sanitized error to prevent potential leakage of sensitive information
-    const errorMsg = error instanceof Error && error.message ? 'Content generation failed' : 'Unknown error';
-    console.error("Zen Moment Error:", errorMsg);
+    console.error("Zen Moment Error:", sanitizeError(error, 'Content generation failed'));
     return null;
   }
 };
