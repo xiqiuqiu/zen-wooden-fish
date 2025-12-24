@@ -40,8 +40,9 @@ export const getZenWisdom = async (totalMerits: number, language: Language): Pro
 
     return response.text.trim();
   } catch (error) {
-    // Only log error message, not the full error object which might contain sensitive data
-    console.error("Gemini Error:", error instanceof Error ? error.message : 'Unknown error');
+    // Log sanitized error to prevent potential leakage of sensitive information
+    const errorMsg = error instanceof Error && error.message ? 'API request failed' : 'Unknown error';
+    console.error("Gemini Error:", errorMsg);
     return language === 'zh' ? "本来无一物，何处惹尘埃。" : "Originally there is nothing, where can dust alight?";
   }
 };
@@ -144,13 +145,14 @@ ${langInstruction}
         insight: insightMatch[1].trim()
       };
     } else {
-      // Only log error type, not raw response which might contain sensitive data
+      // Log generic error message to avoid exposing sensitive data in response text
       console.error("Gemini Response Format Error. Check response structure.");
       return null;
     }
   } catch (error) {
-    // Only log error message, not the full error object which might contain sensitive data
-    console.error("Zen Moment Error:", error instanceof Error ? error.message : 'Unknown error');
+    // Log sanitized error to prevent potential leakage of sensitive information
+    const errorMsg = error instanceof Error && error.message ? 'Content generation failed' : 'Unknown error';
+    console.error("Zen Moment Error:", errorMsg);
     return null;
   }
 };
