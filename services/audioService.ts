@@ -57,7 +57,7 @@ class AudioService {
         console.warn("Audio fetch failed:", response.statusText);
       }
     } catch (error) {
-      console.warn("Failed to preload audio file:", error);
+      console.warn("Failed to preload audio file:", error instanceof Error ? error.message : 'Unknown error');
     }
   }
 
@@ -79,7 +79,7 @@ class AudioService {
       this.context.decodeAudioData(this.audioData.slice(0), (decoded) => {
         this.buffer = decoded;
       }, (e) => {
-        console.warn("Audio decode error:", e);
+        console.warn("Audio decode error:", e instanceof Error ? e.message : 'Decode failed');
       });
     }
   }
