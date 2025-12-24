@@ -1,6 +1,9 @@
 import { GoogleGenAI } from "@google/genai";
 import { Language, ZenMomentContent } from "../types";
+import { sanitizeError } from "../utils/security";
 
+// API key is loaded from environment variable GEMINI_API_KEY via vite.config.ts
+// which maps it to process.env.API_KEY for backward compatibility
 const apiKey = process.env.API_KEY || ''; 
 
 let ai: GoogleGenAI | null = null;
@@ -40,7 +43,8 @@ export const getZenWisdom = async (totalMerits: number, language: Language): Pro
 
     return response.text.trim();
   } catch (error) {
-    console.error("Gemini Error:", error);
+    // Log sanitized error to prevent potential leakage of sensitive information
+    console.error("Gemini Error:", sanitizeError(error, 'API request failed'));
     return language === 'zh' ? "本来无一物，何处惹尘埃。" : "Originally there is nothing, where can dust alight?";
   }
 };
@@ -143,11 +147,13 @@ ${langInstruction}
         insight: insightMatch[1].trim()
       };
     } else {
-      console.error("Gemini Response Format Error. Raw text:", text);
+      // Log generic error message to avoid exposing sensitive data in response text
+      console.error("Gemini Response Format Error. Check response structure.");
       return null;
     }
   } catch (error) {
-    console.error("Zen Moment Error:", error);
+    // Log sanitized error to prevent potential leakage of sensitive information
+    console.error("Zen Moment Error:", sanitizeError(error, 'Content generation failed'));
     return null;
   }
 };

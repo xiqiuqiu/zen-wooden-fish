@@ -1,6 +1,6 @@
 
-
 import { WOODEN_FISH_AUDIO_URL } from '../constants';
+import { sanitizeError } from '../utils/security';
 
 const CACHE_NAME = 'zen-audio-cache-v1';
 
@@ -57,7 +57,7 @@ class AudioService {
         console.warn("Audio fetch failed:", response.statusText);
       }
     } catch (error) {
-      console.warn("Failed to preload audio file:", error);
+      console.warn("Failed to preload audio file:", sanitizeError(error, 'Audio preload failed'));
     }
   }
 
@@ -79,7 +79,7 @@ class AudioService {
       this.context.decodeAudioData(this.audioData.slice(0), (decoded) => {
         this.buffer = decoded;
       }, (e) => {
-        console.warn("Audio decode error:", e);
+        console.warn("Audio decode error: Decoding failed");
       });
     }
   }
