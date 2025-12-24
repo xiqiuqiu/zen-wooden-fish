@@ -2,6 +2,8 @@ import { GoogleGenAI } from "@google/genai";
 import { Language, ZenMomentContent } from "../types";
 import { sanitizeError } from "../utils/security";
 
+// API key is loaded from environment variable GEMINI_API_KEY via vite.config.ts
+// which maps it to process.env.API_KEY for backward compatibility
 const apiKey = process.env.API_KEY || ''; 
 
 let ai: GoogleGenAI | null = null;
